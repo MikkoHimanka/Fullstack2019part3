@@ -43,14 +43,14 @@ app.get('/api/notes', (req, res) => {
 
 app.get('/api/notes/:id', (req, res, next) => {
     Note.findById(req.params.id)
-    .then(note => {
-        if (note) {
-            res.json(note.toJSON())
-        }
-        else {
-        res.status(404).end()
-    }
-})
+        .then(note => {
+            if (note) {
+                res.json(note.toJSON())
+            }
+            else {
+            res.status(404).end()
+            }
+        })
     .catch(error => next(error))
 })
 
@@ -90,9 +90,10 @@ app.post('/api/notes', (req, res) => {
         date: new Date(),
     })
     
-    note.save().then(savedNote => {
-        res.json(savedNote.toJSON())
-    })
+    note.save()
+        .then(savedNote => savedNote.toJSON())
+        .then(savedAndFormattedNote => res.json(savedAndFormattedNote))
+        .catch(error => next(error))
 })
 
 const unknownEndpoint = (req, res) => {
@@ -106,6 +107,8 @@ const errorHandler = (error, req, res, next) => {
 
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
         return res.status(400).send( {error: 'malformatted id' })
+    } else if (error.name == 'ValidationError') {
+        return message.status(400).json({ error: error.message })
     }
 
     next(error)
